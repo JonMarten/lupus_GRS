@@ -1,14 +1,16 @@
 library(data.table)
 library(dplyr)
-sle <- fread("data/SLE_gwas-association-downloaded_2019-02-13-EFO_0002690-withChildTraits.tsv", data.table=F)
+library(stringr)
+sle <- fread("SLE_gwas-association-downloaded_2019-02-13-EFO_0002690-withChildTraits.tsv", data.table=F)
+snplist <- fread("sle_benth_2015_SNPlist.txt", data.table=F, h = F) %>% pull(V1)# List of 43 SNPs reported in Bentham et al 2015
 
-#sle %>% filter(PUBMEDID=="29848360") # Julia et al 2018 (only 5 new hits in Spanish)
-sle_benth <- sle %>% 
-  filter(`STUDY ACCESSION`=="GCST003156") %>%  # Bentham et al 2015, 7219 cases and 15991 controls
+# Get 43 SNPs reported in Bentham et al. Where there are duplicates, keep only the one with the lowest p-value 
+sle_benth <- sle %>%
+  filter(PUBMEDID == "26502338" & SNPS %in% snplist) %>% 
+  arrange(`P-VALUE`)
+sle_benth <- sle_benth[!duplicated(sle_benth$SNPS),]
+sle_benth <- sle_benth %>% 
   select(SNPS, CHR_ID, CHR_POS, REGION, MAPPED_GENE, `STRONGEST SNP-RISK ALLELE`, `OR or BETA`, `P-VALUE`) %>%
-  arrange(CHR_ID, CHR_POS)
-
-  
-
-
-
+  arrange(CHR_ID, CHR_POS) %>%
+  mutate(beta = log(`OR or BETA`),
+         effAll = str_split_fixed(`STRONGEST SNP-RISK ALLELE`, "-", 2)[,2])
