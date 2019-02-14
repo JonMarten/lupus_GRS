@@ -14,3 +14,5 @@ sle_benth <- sle_benth %>%
   arrange(CHR_ID, CHR_POS) %>%
   mutate(beta = log(`OR or BETA`),
          effAll = str_split_fixed(`STRONGEST SNP-RISK ALLELE`, "-", 2)[,2])
+
+write.csv(sle_benth, quote=T, row.names=F, file = "SLE_risk_SNPs_Bentham.csv")
