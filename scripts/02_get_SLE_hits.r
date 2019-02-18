@@ -1,8 +1,8 @@
-library(data.table)
-library(dplyr)
-library(stringr)
-sle <- fread("SLE_gwas-association-downloaded_2019-02-13-EFO_0002690-withChildTraits.tsv", data.table=F)
-snplist <- fread("sle_benth_2015_SNPlist.txt", data.table=F, h = F) %>% pull(V1)# List of 43 SNPs reported in Bentham et al 2015
+  library(data.table)
+  library(dplyr)
+  library(stringr)
+  sle <- fread("SLE_gwas-association-downloaded_2019-02-13-EFO_0002690-withChildTraits.tsv", data.table=F)
+  snplist <- fread("sle_benth_2015_SNPlist.txt", data.table=F, h = F) %>% pull(V1)# List of 43 SNPs reported in Bentham et al 2015
 
 # Get 43 SNPs reported in Bentham et al. Where there are duplicates, keep only the one with the lowest p-value 
 sle_benth <- sle %>%
