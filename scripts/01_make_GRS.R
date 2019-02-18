@@ -74,7 +74,7 @@ identical(sle$rsid, snps$rsid) # check TRUE
 swapAllele <- which(snps$allele1 != sle$effAllele)
 dosage[,swapAllele] <- 2 - dosage[,swapAllele]
 
-# Weight dosage by effect column bJ and calculate sum
+# Weight dosage by beta and calculate sum
 dosewgt <- data.frame(dosage)
 for(i in 1:nrow(sle)){
   dosewgt[,i] <- dosewgt[,i] * sle$beta[i]
@@ -90,3 +90,5 @@ kernelDensity <- ggplot(grs, aes(GRS)) +
 save_plot(paste0("SLE_GRS_kdens_",timestamp,".png"),
           kernelDensity)
 
+# Save GRS for later use
+fwrite(grs, file = "INTERVAL_soma_SLE_GRS.csv")
