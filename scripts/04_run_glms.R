@@ -26,13 +26,13 @@ glmCoefsAll <- data.frame()
 for( i in 1:nrow(protList)){
 #for( i in 1:10){
   cat(paste0("\nProcessing ",i," of ",nrow(protList),": ",protList$protein[i]))
-  plotname <- paste0("boxplots/",protList$protein[i],"_boxplot.png")
-  bxplot <- ggplot(phe, aes(x = GRScat, y = phe[,i+3])) +
-    geom_jitter(alpha = 0.1, size = 0.2) +
-    geom_boxplot() +
-    theme(axis.text.x = element_text(angle = 90)) +
-    labs(x = "GRS category", y = protList$protein[i])
-  ggsave(bxplot, filename = plotname)
+  #plotname <- paste0("boxplots/",protList$protein[i],"_boxplot.png")
+  #bxplot <- ggplot(phe, aes(x = GRScat, y = phe[,i+3])) +
+  #  geom_jitter(alpha = 0.1, size = 0.2) +
+  #  geom_boxplot() +
+  #  theme(axis.text.x = element_text(angle = 90)) +
+  #  labs(x = "GRS category", y = protList$protein[i])
+  #ggsave(bxplot, filename = plotname)
   
   # glm
   dat <- phe[,c(3,i+3)]
@@ -54,6 +54,23 @@ for( i in 1:nrow(protList)){
   coefTall <- coefTall %>%
     select(protein, GRScat, key, value)
   glmCoefsAll <- rbind(glmCoefsAll, coefTall)
-  rm(plotname, bxplot,dat,form,protGLM,coefs,coefTall)
+  #rm(plotname, bxplot,dat,form,protGLM,coefs,coefTall)
+  rm(dat,form,protGLM,coefs,coefTall)
 }
 fwrite(glmCoefsAll, file = "glm_coefs_all.csv", sep=",")
+sig <- filter(glmCoefsAll, key =="P" & value < 0.05/4034)
+
+# FDR correction
+Qvals <- glmCoefsAll %>%
+  filter(key == "P") %>%
+  spread(key = "GRScat", value = "value") %>%
+  mutate(`GRScat(3.94,5.3]` = p.adjust(`GRScat(3.94,5.3]`),
+         `GRScat(5.3,6.65]` = p.adjust(`GRScat(5.3,6.65]`),
+         `GRScat(8.01,9.37]` = p.adjust(`GRScat(8.01,9.37]`),
+         `GRScat(9.37,10.7]` = p.adjust(`GRScat(9.37,10.7]`),
+         `(Intercept)` = p.adjust(`(Intercept)`)
+         )
+QvalsT <- gather(Qvals[,3:7],key = "GRScat", value = "value")
+QvalsT$protein <- Qvals$protein
+QvalsT$key <- "Q"
+glmCoefsAll <- bind_rows(glmCoefsAll, QvalsT)
