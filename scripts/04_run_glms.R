@@ -8,7 +8,7 @@ rownames(allProt) <- allProt$id
 
 # Assign to GRS categories
 grs <- fread("INTERVAL_soma_SLE_GRS.csv", data.table=F)
-bins <- seq(min(grs$GRS)-0.001,max(grs$GRS)+0.001,length.out = 6)
+bins <- seq(min(grs$GRS)-0.001,max(grs$GRS)+0.001,length.out = 9)
 grs <- grs %>%
   mutate(GRScat = cut(GRS, breaks = bins))
 
