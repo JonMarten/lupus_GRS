@@ -57,7 +57,6 @@ for( i in 1:nrow(protList)){
   #rm(plotname, bxplot,dat,form,protGLM,coefs,coefTall)
   rm(dat,form,protGLM,coefs,coefTall)
 }
-fwrite(glmCoefsAll, file = "glm_coefs_all.csv", sep=",")
 sig <- filter(glmCoefsAll, key =="P" & value < 0.05/4034)
 
 # FDR correction. N.B. THIS HARDCODES GRS cats so will be broken for a different trait or threshold. Should be fixed.
@@ -74,6 +73,7 @@ QvalsT <- gather(Qvals[,3:7],key = "GRScat", value = "value")
 QvalsT$protein <- Qvals$protein
 QvalsT$key <- "Q"
 glmCoefsAll <- bind_rows(glmCoefsAll, QvalsT)
+fwrite(glmCoefsAll, file = "glm_coefs_all.csv", sep=",")
 
 # Boxplots
 phe$GRScat <- factor(phe$GRScat, 
@@ -97,34 +97,39 @@ glmCoefsAllCont <- data.frame()
 for( i in 1:nrow(protList)){
   #for( i in 1:10){
   cat(paste0("\nProcessing ",i," of ",nrow(protList),": ",protList$protein[i]))
-  #plotname <- paste0("boxplots/",protList$protein[i],"_boxplot.png")
-  #bxplot <- ggplot(phe, aes(x = GRScat, y = phe[,i+3])) +
-  #  geom_jitter(alpha = 0.1, size = 0.2) +
-  #  geom_boxplot() +
-  #  theme(axis.text.x = element_text(angle = 90)) +
-  #  labs(x = "GRS category", y = protList$protein[i])
-  #ggsave(bxplot, filename = plotname)
-  
   # glm
   dat <- phe[,c(2,i+3)]
   form <- formula(paste0(protList$protein[i], " ~ GRS"))
   protGLM <- glm(data = dat, formula = form)
   coefs <- data.frame(coef(summary(protGLM)))
   coefs <- coefs %>%
-    mutate(GRScat = rownames(coefs),
+    mutate(GRS = rownames(coefs),
            protein = protList$protein[i]) %>%
     select(protein, 
-           GRScat, 
+           GRS, 
            estimate = Estimate,
            SE = Std..Error,
            t = t.value,
            P = Pr...t..)
   coefTall <- gather(coefs[,c("estimate","SE","t","P")])
   coefTall$protein <- protList$protein[i]
-  coefTall$GRScat <- coefs$GRScat
+  coefTall$GRS <- coefs$GRS
   coefTall <- coefTall %>%
-    select(protein, GRScat, key, value)
+    select(protein, GRS, key, value)
   glmCoefsAllCont <- rbind(glmCoefsAllCont, coefTall)
   #rm(plotname, bxplot,dat,form,protGLM,coefs,coefTall)
   rm(dat,form,protGLM,coefs,coefTall)
 }
+
+# FDR correction
+Qvals <- glmCoefsAllCont %>%
+  filter(key == "P") %>%
+  spread(key = "GRS", value = "value") 
+
+Qvals[,-c(1,2)] <- apply(Qvals[,-c(1,2)], MARGIN = 2, FUN = p.adjust)
+
+QvalsT <- gather(Qvals[,3:ncol(Qvals)],key = "key", value = "value")
+QvalsT$protein <- Qvals$protein
+QvalsT$key <- "Q"
+glmCoefsAllCont <- bind_rows(glmCoefsAllCont, QvalsT)
+fwrite(glmCoefsAllCont, file = "glm_coefs_all_continuous.csv", sep=",")
