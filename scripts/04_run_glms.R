@@ -62,14 +62,10 @@ sig <- filter(glmCoefsAll, key =="P" & value < 0.05/4034)
 # FDR correction. N.B. THIS HARDCODES GRS cats so will be broken for a different trait or threshold. Should be fixed.
 Qvals <- glmCoefsAll %>%
   filter(key == "P") %>%
-  spread(key = "GRScat", value = "value") %>%
-  mutate(`GRScat(3.94,5.3]` = p.adjust(`GRScat(3.94,5.3]`),
-         `GRScat(5.3,6.65]` = p.adjust(`GRScat(5.3,6.65]`),
-         `GRScat(8.01,9.37]` = p.adjust(`GRScat(8.01,9.37]`),
-         `GRScat(9.37,10.7]` = p.adjust(`GRScat(9.37,10.7]`),
-         `(Intercept)` = p.adjust(`(Intercept)`)
-         )
-QvalsT <- gather(Qvals[,3:7],key = "GRScat", value = "value")
+  spread(key = "GRScat", value = "value") 
+
+Qvals[,-c(1,2)] <- apply(Qvals[,-c(1,2)], MARGIN = 2, FUN = p.adjust)
+QvalsT <- gather(Qvals[,-c(1:2)],key = "GRScat")
 QvalsT$protein <- Qvals$protein
 QvalsT$key <- "Q"
 glmCoefsAll <- bind_rows(glmCoefsAll, QvalsT)
@@ -92,7 +88,7 @@ for(i in 1:length(sigProts)){
   ggsave(paste0("boxplot_",sigProts[i],".png"), plot = bp)
 }
 
-# Continuous GRS models?
+# Continuous GRS models
 glmCoefsAllCont <- data.frame()
 for( i in 1:nrow(protList)){
   #for( i in 1:10){
