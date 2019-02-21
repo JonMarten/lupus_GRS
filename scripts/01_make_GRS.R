@@ -71,7 +71,7 @@ snps <- snps %>%
 sle <- sle[match(snps$rsid, sle$rsid),]
 identical(sle$rsid, snps$rsid) # check TRUE
 
-swapAllele <- which(snps$allele1 != sle$effAllele)
+swapAllele <- which(toupper(snps$allele1) != toupper(sle$effAllele))
 dosage[,swapAllele] <- 2 - dosage[,swapAllele]
 
 # Weight dosage by beta and calculate sum
