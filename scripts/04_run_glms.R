@@ -8,7 +8,7 @@ rownames(allProt) <- allProt$id
 
 # Assign to GRS categories
 grs <- fread("INTERVAL_soma_SLE_GRS.csv", data.table=F)
-bins <- seq(min(grs$GRS)-0.001,max(grs$GRS)+0.001,length.out = 9)
+bins <- seq(min(grs$GRS)-0.001,max(grs$GRS)+0.001,length.out = 6)
 grs <- grs %>%
   mutate(GRScat = cut(GRS, breaks = bins))
 
@@ -18,9 +18,6 @@ grs$GRScat <- as.factor(grs$GRScat)
 grs$GRScat <- relevel(grs$GRScat, ref = refCat)
 
 phe <- full_join(grs,allProt, by = "id")
-
-# Make boxplots
-#dir.create("boxplots")
 
 glmCoefsAll <- data.frame()
 for( i in 1:nrow(protList)){
@@ -71,7 +68,8 @@ QvalsT$key <- "Q"
 glmCoefsAll <- bind_rows(glmCoefsAll, QvalsT)
 fwrite(glmCoefsAll, file = "glm_coefs_all.csv", sep=",")
 
-# Boxplots
+# Make boxplots for all proteins with a significant association
+dir.create("boxplots") # Throws a warning if dir already exists but does not terminate script
 phe$GRScat <- factor(phe$GRScat, 
                      levels = sort(levels(phe$GRScat))) # reorder factor to match increasing GRS. 
 sigProts <- glmCoefsAll %>% 
@@ -85,7 +83,7 @@ for(i in 1:length(sigProts)){
     geom_jitter(alpha = 0.1, size = 0.2, width = 0.2) +
     theme(axis.text.x = element_text(angle = 90)) +
     labs(x = "GRS category", y = sigProts[i])
-  ggsave(paste0("boxplot_",sigProts[i],".png"), plot = bp)
+  ggsave(paste0("boxplots/boxplot_",sigProts[i],".png"), plot = bp)
 }
 
 # Continuous GRS models
