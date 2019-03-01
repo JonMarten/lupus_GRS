@@ -2,13 +2,12 @@
 # Note that gwas catalog is on b38 and our genetic data appears to be on b37.
 # N.B. bgen data array is snps x samples x genotypes
 # Parameters
-genPath <- "/scratch/bp406/data_sets/interval_subset_olink/genotype_files/unrelated_4994_pihat_0.1875_autosomal_imputed_info_0.4_phwe_1e-4_filtered/per_chr"
-interval_subset_olink.wga_imputed.chr_${CHR}.unrelated_4994.pihat_0.1875_info_0.4_phwe_1e-4_filtered.bgen
-
-# Sample file
-samplePath <- "/home/jp549/post-doc/genetics/r2-test/sample_files"
-INPUT_SAMPLE_FILE_SOURCE_DATA_FILE_ROOT_NAME=o5000-${PANEL}-${OUTLIER}-r2.sample
-
+genPath <- "/scratch/bp406/data_sets/interval_subset_olink/genotype_files/unrelated_4994_pihat_0.1875_autosomal_imputed_info_0.4_phwe_1e-4_filtered/per_chr/"
+genPrefix <- "interval_subset_olink.wga_imputed.chr_"
+genSuffix <- ".unrelated_4994.pihat_0.1875_info_0.4_phwe_1e-4_filtered.bgen"
+samplePath <- "/home/jp549/post-doc/genetics/r2-test/sample_files/"
+samplePrefix <- "o5000-"
+sampleSuffix <- "-outlier_in-r2.sample"
 
 setwd("/home/jm2294/projects/SLE_GRS/OLINK")
 lapply(c("dplyr", "ggplot2", "rbgen", "data.table", "cowplot"), require, character.only = T)
@@ -25,9 +24,12 @@ sle <- sle %>%
          beta,
          P = P.VALUE)
 # All SNPs should be set to the risk-increasing direction. This has already been done by GWAS catalog in this case.
-
-sample <- fread("/scratch/bs446/BAKEOFF151001/genetic_data/imputed/somalogic/round_all_m0.001_i0.3_PostProtein_IBDQC/SOMAS_round_all_SOMAS_round_all_impute_1_interval_filtered2.sample", data.table=F)
+panels <- c("inf1","cvd2","cvd3")
+i <- 1
+panel <- panels[i]
+sample <- fread(data.table = F, paste0(samplePath, samplePrefix,panel,sampleSuffix))
 sample <- sample[-1,]
+sample <- apply(sample, MARGIN = 2, FUN = as.numeric)
 
 # FUNCTION: Convert bgen AA:AB:BB format to B dosage format
 bgenToDose <- function(bgen){
