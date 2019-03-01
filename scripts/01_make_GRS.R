@@ -37,7 +37,7 @@ bgenToDose <- function(bgen){
 # Loop over all 22 autosomes and save B allele dosages for each individual
 firstRow <- TRUE
 for(i in 1:22){
-  bgenPath <- paste0("/home/jm2294/GENETIC_DATA/INTERVAL/bgen/SOMAS_round_all_SOMAS_round_all_impute_",
+  bgenPath <- paste0("/home/jm2294/GENETIC_DATA/INTERVAL/somalogic/bgen/SOMAS_round_all_SOMAS_round_all_impute_",
                      i,
                      "_interval_filtered2_reworked.bgen")
   snpRow <- which(sle$chr == i)
