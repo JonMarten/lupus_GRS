@@ -2,9 +2,9 @@
 # Note that gwas catalog is on b38 and our genetic data appears to be on b37.
 # N.B. bgen data array is snps x samples x genotypes
 # Parameters
-genPath <- "/scratch/bp406/data_sets/interval_subset_olink/genotype_files/unrelated_4994_pihat_0.1875_autosomal_imputed_info_0.4_phwe_1e-4_filtered/per_chr/"
-genPrefix <- "interval_subset_olink.wga_imputed.chr_"
-genSuffix <- ".unrelated_4994.pihat_0.1875_info_0.4_phwe_1e-4_filtered.bgen"
+genPath <- "/home/jm2294/GENETIC_DATA/INTERVAL/olink/bgen/"
+genPrefix <- "interval.imputed.olink.chr_"
+genSuffix <- ".bgen"
 samplePath <- "/home/jp549/post-doc/genetics/r2-test/sample_files/"
 samplePrefix <- "o5000-"
 sampleSuffix <- "-outlier_in-r2.sample"
@@ -25,11 +25,11 @@ sle <- sle %>%
          P = P.VALUE)
 # All SNPs should be set to the risk-increasing direction. This has already been done by GWAS catalog in this case.
 panels <- c("inf1","cvd2","cvd3")
-i <- 1
-panel <- panels[i]
+j <- 1
+panel <- panels[j]
 sample <- fread(data.table = F, paste0(samplePath, samplePrefix,panel,sampleSuffix))
 sample <- sample[-1,]
-sample <- apply(sample, MARGIN = 2, FUN = as.numeric)
+sample <- apply(sample, MARGIN = 2, FUN = as.numeric) %>% data.frame(stringsAsFactors = F)
 
 # FUNCTION: Convert bgen AA:AB:BB format to B dosage format
 bgenToDose <- function(bgen){
@@ -48,9 +48,7 @@ bgenToDose <- function(bgen){
 # Loop over all 22 autosomes and save B allele dosages for each individual
 firstRow <- TRUE
 for(i in 1:22){
-  bgenPath <- paste0("/home/jm2294/GENETIC_DATA/INTERVAL/bgen/SOMAS_round_all_SOMAS_round_all_impute_",
-                     i,
-                     "_interval_filtered2_reworked.bgen")
+  bgenPath <- paste0(genPath, genPrefix,i,genSuffix)
   snpRow <- which(sle$chr == i)
   if(length(snpRow) == 0){next}   # Skip to next chromosome if no SNPs on this one
   bgen <- bgen.load(bgenPath, rsids = sle$rsid[snpRow])
@@ -72,7 +70,7 @@ snps <- snps %>%
          allele1 = as.character(allele1))
 
 # Add proper sample ids as these are not embedded in the bgen files
-rownames(dosage) <- as.character(sample$ID_1)
+rownames(dosage) <- as.character(sample$ID_1) 
 
 # Remove X chr (temporary)
 sle <- sle %>%
@@ -98,8 +96,8 @@ timestamp <- strftime(Sys.time(), format = "%Y-%m-%d_%H:%M:%S" )
 kernelDensity <- ggplot(grs, aes(GRS)) +
   geom_density()
 
-save_plot(paste0("SLE_GRS_kdens_",timestamp,".png"),
+save_plot(paste0("SLE_GRS_olink_GRS_kernel_density_",timestamp,".png"),
           kernelDensity)
 
 # Save GRS for later use
-fwrite(grs, file = "INTERVAL_soma_SLE_GRS.csv")
+fwrite(grs, file = "INTERVAL_olink_SLE_GRS.csv")
