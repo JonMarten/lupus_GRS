@@ -18,13 +18,15 @@ for(j in 1:length(panels)){
   pheList[[j]] <- sample
   names(pheList)[j] <- panel
   
-  # Make data frame with protein-panel assignments
+# Make data frame with protein-panel assignments
   tempPanel <- data.frame("protein" = names(sample),"panel" = panel, stringsAsFactors = F) %>% 
     filter(grepl("___", protein))
   protPanel <- rbind(protPanel, tempPanel)
   
   rm(sample, tempPanel, panel)
 }
+
+fwrite(protPanel, file = "olink_protein_panel_manifest.csv")
 
 # Identify proteins included on multiple panels
 dupeProts <- protPanel %>% group_by(protein) %>% filter(n() > 1) %>% data.frame(stringsAsFactors = F)
