@@ -34,5 +34,43 @@ names(pheList$inf1)[which(names(pheList$inf1) %in% dupeProts$protein)] <- paste0
 names(pheList$cvd2)[which(names(pheList$cvd2) %in% dupeProts$protein)] <- paste0(names(pheList$cvd2)[which(names(pheList$cvd2) %in% dupeProts$protein)],"_cvd2")
 names(pheList$cvd3)[which(names(pheList$cvd3) %in% dupeProts$protein)] <- paste0(names(pheList$cvd3)[which(names(pheList$cvd3) %in% dupeProts$protein)],"_cvd3")
 
-phe <- full_join(pheList$inf1, pheList$cvd2)
-phe <- full_join(phe,pheList$cvd3)
+inf1 <- pheList$inf1 %>%
+  rename(plate_inf1 = plate)
+cvd2 <- pheList$cvd2 %>%
+  rename(plate_cvd2 = plate)
+cvd3 <- pheList$cvd3 %>% 
+  rename(plate_cvd3 = plate)
+
+# Check columns match other than NAs
+for(i in 1:28) {
+  print(names(inf1)[i])
+  if(identical(inf1[,i], cvd2[,i]) & identical(cvd2[,i], cvd3[,i])) {
+    print("Match") 
+  } else {
+    print(which(inf1[,i] != cvd2[,i]))
+  }
+}
+
+# Coalesce to remove NAs
+phe <- data.frame(matrix(ncol = 28, nrow = nrow(inf1)))
+for(i in 1:28){
+  phe[,i] <- coalesce(inf1[,i], cvd2[,i], cvd3[,i])
+}
+names(phe) <- names(inf1)[1:28]
+
+# Combine into single data frame
+phe <- cbind(phe, cvd2$plate_cvd2, cvd3$plate_cvd3)
+phe <- phe %>%
+  select(id = ID_1,
+         age,
+         sexPulse,
+         season,
+         plate_inf1,
+         plate_cvd2 = "cvd2$plate_cvd2",
+         plate_cvd3 = "cvd3$plate_cvd3",
+         bleed_to_process_time,
+         PC1:PC20)
+
+phe <- cbind(phe, inf1[,29:120], cvd2[,29:120], cvd3[,29:120])
+
+fwrite(phe, "INTERVAL_Olink_inf1_cvd2_cvd3_merged.csv")
