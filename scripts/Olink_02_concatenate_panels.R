@@ -26,22 +26,31 @@ for(j in 1:length(panels)){
   rm(sample, tempPanel, panel)
 }
 
-fwrite(protPanel, file = "olink_protein_panel_manifest.csv")
 
-# Identify proteins included on multiple panels
-dupeProts <- protPanel %>% group_by(protein) %>% filter(n() > 1) %>% data.frame(stringsAsFactors = F)
-which(names(pheList$inf1) %in% dupeProts$protein)
-
-names(pheList$inf1)[which(names(pheList$inf1) %in% dupeProts$protein)] <- paste0(names(pheList$inf1)[which(names(pheList$inf1) %in% dupeProts$protein)],"_inf1")
-names(pheList$cvd2)[which(names(pheList$cvd2) %in% dupeProts$protein)] <- paste0(names(pheList$cvd2)[which(names(pheList$cvd2) %in% dupeProts$protein)],"_cvd2")
-names(pheList$cvd3)[which(names(pheList$cvd3) %in% dupeProts$protein)] <- paste0(names(pheList$cvd3)[which(names(pheList$cvd3) %in% dupeProts$protein)],"_cvd3")
-
+# Separate list into data frames per panel
 inf1 <- pheList$inf1 %>%
   rename(plate_inf1 = plate)
 cvd2 <- pheList$cvd2 %>%
   rename(plate_cvd2 = plate)
 cvd3 <- pheList$cvd3 %>% 
   rename(plate_cvd3 = plate)
+
+# Identify proteins included on multiple panels
+dupeProts <- protPanel %>% 
+  group_by(protein) %>% 
+  filter(n() > 1) %>% 
+  data.frame(stringsAsFactors = F)
+
+protPanel <- protPanel %>%
+  mutate(protName = ifelse(protein %in% dupeProts$protein,
+                           paste0(protein,"_",panel),
+                           protein)
+  )
+fwrite(protPanel, file = "olink_protein_panel_manifest.csv")
+     
+names(inf1)[which(names(inf1) %in% dupeProts$protein)] <- paste0(names(inf1)[which(names(inf1) %in% dupeProts$protein)],"_inf1")
+names(cvd2)[which(names(cvd2) %in% dupeProts$protein)] <- paste0(names(cvd2)[which(names(cvd2) %in% dupeProts$protein)],"_cvd2")
+names(cvd3)[which(names(cvd3) %in% dupeProts$protein)] <- paste0(names(cvd3)[which(names(cvd3) %in% dupeProts$protein)],"_cvd3")
 
 # Check columns match other than NAs
 for(i in 1:28) {
